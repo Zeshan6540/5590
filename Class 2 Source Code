@@ -1,0 +1,49 @@
+import collections
+
+# -----------------------------Task1----------------------------
+
+str = 'asnjjs1212dslkjfj'
+print("Freq of each char %s" % collections.Counter(str))
+
+# ------------------------Task2-----------------------------------
+CountD = 0
+CountN = 0
+lsN = []
+lsN = str
+
+for i in lsN:
+    if i.isdigit():
+        CountD = CountD + 1
+    else:  # str.isalpha()=="True":
+        CountN = CountN + 1
+print('Number of char %s and Number of digits %d' % (CountN, CountD))
+
+# -------------------task3----------------------------------
+
+ls1 = []
+
+moredata = "yes"
+print(moredata[0])
+while moredata[0] == 'y':
+    x=input('Enter the number')
+    ls1.append(x)
+    print(ls1)
+    moredata = input("Do u have more numbers(yes or no)? ")
+print("\nThe list is", ls1)
+
+# ---------------task4----------------------
+
+ls2 = []
+ls2 = ls1[0] + ls1[-1]
+print('New list after first and last number is')
+print(ls2)
+
+
+#--------------------------------task5--------------
+lsD=[]
+lsA=["abc","abcde","abcd","abcdef"]
+for i in lsA:
+    x=len(i)
+    lsD.append(x)
+lsD.sort()
+print('The higest length is %s'%lsD[-1])
