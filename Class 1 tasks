@@ -1,0 +1,53 @@
+#-------------Task 2-----------------------------------------------
+
+import math
+import random
+
+r = float(input('enter radius of circle: '))
+
+Area=math.pi*r*r
+
+Cir=2*math.pi*r
+
+
+print('Area of the circle :' , Area)
+print("circumference of the circle : ",Cir)
+
+
+Input1 = int(input('enter a number '))
+if Input1%2==0:
+    print('Input is even')
+else:
+    print('Input is odd')
+
+
+
+
+#----------------------Task 3-------------------------------
+import random
+
+number = random.randint(1, 9)
+print( "Think of the number between 1 and 20.",number )
+
+guessnumber=int(input('Enter the guess number'))
+
+
+while (1):
+
+   if guessnumber == number:
+        print('Your guess is correct')
+        break
+
+   if guessnumber < number:
+        print('Your guess is too low.')
+        print('Guess Number again')
+        guessnumber=int(input('Enter the number'))
+
+   if guessnumber > number:
+        print('Your guess is too high.')
+        print('Guess Number again')
+        guessnumber = int(input('Enter the number'))
+
+
+
+
