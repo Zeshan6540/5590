@@ -1,0 +1,60 @@
+#-----------------------------task 1------------------------
+import requests
+from bs4 import BeautifulSoup
+import os
+
+#created by saria goudarzvand
+def search_spider(sea, lim):
+    url = "https://en.wikipedia.org/w/index.php?limit="+lim+"&offset=0&search="+sea
+    source_code = requests.get(url)
+    plain_text = source_code.text
+    soup = BeautifulSoup(plain_text, "html.parser")
+    result_list = soup.findAll('div', {'class': "mw-search-result-heading"})
+    #print(result_list)
+    for div in result_list:
+        link = div.find('a')
+        href = "https://en.wikipedia.org"+link.get('href')
+        if (link.get('href').startswith("http")):
+            href=link.get('href')
+        get_data(href)
+
+
+def get_data(url):
+    source_code = requests.get(url)
+    plain_text = source_code.text
+    soup = BeautifulSoup(plain_text, "html.parser")
+    body = soup.find('h1')   #, {'class': 'mw-parser-output'})
+    print(body.text)
+
+search = input('type something to search in wiki: ')
+limit = input('how many results do you want to get?: ')
+
+if not os.path.exists(search):
+    print("Creating folder " + search)
+    os.makedirs(search)
+
+searc = search.replace(' ', '+')
+search_spider(searc, limit)
+
+#---------------------------------Task 2----------------------------------------------------------
+s1=input("Give comma seperated input")
+s2=s1.split(",")
+s2.sort()
+print(s2)
+
+
+
+#-----------------------Task 3--------------------------------------------
+fre={}
+ls1=[{'LastGPA' : 90, 'CurrentGPA': 80,'name':'zeshan'},
+{'LastGPA' : 95, 'CurrentGPA': 85,'name':'Ehsan'},
+{'LastGPA' : 100,'CurrentGPA': 100,'name':'Umer'}]
+
+for i in ls1:
+    a =i.pop("LastGPA")
+    b =i.pop("CurrentGPA")
+    l=(a+b)/2
+    i.update({'AvgGPA':l})
+
+
+print(ls1)
