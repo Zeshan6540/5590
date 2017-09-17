@@ -27,9 +27,9 @@ s=Student("Zeshan",24,"A")
 t=TransferStudent("Zeshan",21,"A")
 s.increment()
 t.increment()
-print(s.getName())
-print(t.getAge())
-print(s.__class__.counter)
+print('Name of the student is %s',s.getName())
+print('Age of the student %a',t.getAge())
+print('Number of students add %d',s.__class__.counter)
 
 -------------------------Task 2----------------------------------
 
@@ -37,6 +37,6 @@ import numpy as nu
 
 b=nu.random.rand(1,5)
 print(b)
-print(nu.amax(b))
-print(nu.min(b))
+print('Maximum random value is %d',nu.amax(b))
+print('Minimum random value is %m',nu.min(b))
 
