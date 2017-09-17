@@ -1,0 +1,39 @@
+----------------------Task 1---------------------------------
+class Student:
+    counter=0
+    def __init__(self,n,a,d):
+        self.name=n
+        self.age=a
+        self.grade=d
+
+    def getName(self):
+        return self.nam e
+
+    def getAge(self):
+        return self.age
+
+    def increment(self):
+        Student.counter +=1
+
+
+class TransferStudent(Student):
+    def __init__(self,n,a,d):
+        Student.__init__(self,n,a,d)
+        #self.section=q
+        pass
+
+
+s=Student("Zeshan",24,"A")
+t=TransferStudent("Zeshan",21,"A")
+print(s.getName())
+print(t.getAge())
+
+-------------------------Task 2----------------------------------
+
+import numpy as nu
+
+b=nu.random.rand(1,5)
+print(b)
+print(nu.amax(b))
+print(nu.min(b))
+
