@@ -25,8 +25,11 @@ class TransferStudent(Student):
 
 s=Student("Zeshan",24,"A")
 t=TransferStudent("Zeshan",21,"A")
+s.increment()
+t.increment()
 print(s.getName())
 print(t.getAge())
+print(s.__class__.counter)
 
 -------------------------Task 2----------------------------------
 
