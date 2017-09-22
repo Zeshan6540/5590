@@ -1,0 +1,88 @@
+------------------------------Task 1--------------------------
+temp=input('Input any sentacne from which you want to remove \n'
+           'the repetitive words and sort them')
+lis1=temp.split(" ")
+lis2=[]
+
+for i in lis1:
+    if i not in lis2:
+        lis2.append(i)
+
+lis2.sort()
+print( ' '.join(lis2))
+
+
+
+-------------------------------Task 2-------------------------------
+num=int(input("Enter the number"))
+Arr=[]
+i=1
+while i<=num:
+    Arr.append(i)
+    i+=1
+print(Arr)
+fre={}
+
+for j in Arr:
+    a=j
+    b=j*j
+    fre.update({j:(j*j)})
+
+print(fre)
+
+--------------------------------Task 3----------------------------------
+class Library():
+    __Counter=0
+    def __init__(self,l):
+        self.libraryName=l
+
+    def getlibraryname(self):
+        return self.libraryName
+
+class book(Library):
+    def __init__(self,b,l):
+        super().__init__(l)
+        self.book_name=b
+
+    def getbookname(self):
+        return self.book_name
+
+class student(book):
+    def __init__(self,b,l,s):
+        super(student,self).__init__(b,l)
+        self.studentname=s
+
+class LibraryPerson():
+    def __init__(self,lp):
+        #super(LibraryPerson,self).__init__(l)
+        self.library_person=lp
+
+class BookCopies(student,LibraryPerson):
+    def __init__(self,b,l,s,lp,cp):
+        student.__init__(self,b,l,s)
+        LibraryPerson.__init__(self,lp)
+        self.copies=cp
+
+a=Library('Linda')
+b=book("Python","Dental")
+c=student("Python","Linda","Zeshan")
+d=LibraryPerson("Danial")
+e=BookCopies("Python","Linda","Zeshan","Danial",2)
+print('Library Person is %a'%e.library_person)
+print(e.libraryName)
+print(e.studentname)
+print(e.copies)
+print(e)
+
+
+-----------------------Task 4---------------------
+
+import numpy as nu
+
+vect=nu.random.rand(15)
+print(vect)
+temp=nu.argmax(a=vect)
+print(temp)
+nu.put(a=vect,ind=temp,v=100)
+print(vect)
+
