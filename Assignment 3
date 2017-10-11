@@ -1,0 +1,133 @@
+--------------------------Task 1--------------------------------------
+import csv
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn import linear_model
+from sklearn.model_selection import train_test_split
+
+input = pd.read_csv("Advertising_TV_Sales.csv");
+
+x=(input.TV)
+y=(input.Sales)
+x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.20)
+model1=linear_model.LinearRegression()
+model1.fit(np.transpose(np.matrix(x_train)),np.transpose(np.matrix(y_train.values)))
+pre=model1.predict(np.transpose(np.matrix(x_test)))
+plt.scatter(x_test,y_test,  color='black')
+plt.plot(x_test,pre, color='blue')
+plt.show()
+
+
+
+-------------------------------Task 2-------------------------------------------
+import pandas as pd
+from sklearn.cluster import KMeans
+from scipy import stats
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+data=pd.read_csv('Customers.csv')
+kmeans_mod=KMeans(n_clusters=3)
+data = pd.get_dummies(data, columns=['Genre'])
+col = ['CustomerID','Age','Annual Income','Spending Score']
+
+scr = stats.zscore(data[col])
+kmeans = KMeans(n_clusters=5, random_state=0).fit(scr)
+labels = kmeans.labels_
+data['clusters'] = labels
+
+col.extend(['clusters'])
+
+print(data[col].groupby(['clusters']).mean())
+
+sns.lmplot('Annual Income', 'Spending Score',
+           data=data,
+           fit_reg=False,
+           hue="clusters",
+           scatter_kws={"marker": "D",
+                        "s": 100})
+plt.title('Clusters of Customers')
+plt.xlabel('Annual Income')
+plt.ylabel('Spending Score')
+plt.show()
+
+
+
+--------------------------------Task 3-----------------------------
+from sklearn import datasets
+from sklearn import svm
+from sklearn.model_selection import train_test_split
+from sklearn.metrics.pairwise import chi2_kernel
+import sklearn
+
+datasets1=datasets.load_boston()
+x=datasets1.data
+y=datasets1.target
+
+x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.20)
+
+model=svm.SVR(kernel='linear')
+model.fit(x_train,y_train)
+print('Accuracy when linear kernal applied is %s'%(model.score(x_test,y_test)))
+
+model2=svm.SVR(kernel='rbf')
+model2.fit(x_train,y_train)
+print('Accuracy when rbf kernal applied is %d'%(model2.score(x_test,y_test)))
+
+
+-------------------------------------Task 4-------------------------------
+import re, collections
+from nltk.tokenize import wordpunct_tokenize,sent_tokenize,word_tokenize
+from nltk.tag import pos_tag
+from nltk.stem import WordNetLemmatizer
+
+
+def tokens(text):
+    """
+    Get all words from the corpus
+    """
+    return re.findall('[a-z]+', text.lower())
+isl=[]
+WORDS = tokens(file('big.txt').read())
+
+Lemintize=WordNetLemmatizer()
+for i in WORDS:
+    isl.append(Lemintize.lemmatize(i,pos='v'))
+
+isl3=[]
+isl2=pos_tag(isl)
+
+counter=0
+counter1=0
+isl4=[]
+while counter<len(isl2):
+    if isl2[counter][1]!='VB' or isl2[counter][1]!='VBD' or isl2[counter][1]!='VBG' or isl2[counter][1]!='VBN' or isl2[counter][1]!='VBP' or isl2[counter][1]!='VBZ':
+        isl3.append(isl2[counter])
+    counter +=1
+print isl3
+
+WORD_freq = collections.Counter(isl3)
+commn=WORD_freq.most_common(5)
+
+print commn
+
+while counter1<len(commn):
+    isl4.append(commn[counter1][0][0])
+    counter1 +=1
+
+print isl4
+
+sentense = file('big.txt').read().lower()
+a=sent_tokenize(sentense)
+
+#print a
+isl5=[]
+for i in a:
+    b=word_tokenize(i)
+    for j in b:
+        if j in isl4:
+            isl5.append(i)
+        break
+
+print isl5
