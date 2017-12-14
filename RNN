@@ -1,0 +1,275 @@
+import tensorflow as tf
+
+class TRNNConfig (object):
+    "" "RNN configuration parameter" ""
+
+    # Model parameters
+    embedding_dim = 64 # word vector dimension
+    seq_length = 600 # sequence length
+    num_classes = 10 # The number of categories
+    vocab_size = 5000 # Vocabulary expression is small
+
+    num_layers = 2 # Hidden layers
+    hidden_dim = 128 # Hidden layer neurons
+    rnn = 'lstm' # lstm or gru
+
+    dropout_keep_prob = 0.8 # dropout retention ratio
+    learning_rate = 1e-3 # The learning rate
+
+    batch_size = 128 # each training size
+    num_epochs = 10 # total iteration rounds
+
+    print_per_batch = 100 # The number of rounds to output a result
+    save_per_batch = 10 # how many rounds into tensorboard
+
+
+class TextRNN (object):
+    "" "Text classification, RNN model" ""
+    def __init __ (self, config):
+        self.config = config
+
+        # Three data to be entered
+        self.input_x = tf.placeholder (tf.int32, [None, self.config.seq_length], name = 'input_x')
+        self.input_y = tf.placeholder (tf.float32, [None, self.config.num_classes], name = 'input_y')
+        self.keep_prob = tf.placeholder (tf.float32, name = 'keep_prob')
+
+        self.rnn ()
+        
+    def rnn (self):
+        "" rnn model "" "
+
+        def lstm_cell (): # lstm core
+            return tf.contrib.rnn.BasicLSTMCell (self.config.hidden_dim, state_is_tuple = True)
+
+        def gru_cell (): # gru core
+            return tf.contrib.rnn.GRUCell (self.config.hidden_dim)
+
+        def dropout (): # Add a dropout layer to each rnn core
+            if (self.config.rnn == 'lstm'):
+                cell = lstm_cell ()
+            else:
+                cell = gru_cell ()
+            return tf.contrib.rnn.DropoutWrapper (cell, output_keep_prob = self.keep_prob)
+
+        # Word vector mapping
+        with tf.device ('/ cpu: 0'):
+            embedding = tf.get_variable ('embedding', [self.config.vocab_size, self.config.embedding_dim])
+            embedding_inputs = tf.nn.embedding_lookup (embedding, self.input_x)
+
+        with tf.name_scope ("rnn"):
+            # Multi-layer rnn network
+            cells = [dropout () for _ in range (self.config.num_layers)]
+            rnn_cell = tf.contrib.rnn.MultiRNNCell (cells, state_is_tuple = True)
+
+            _outputs, _ = tf.nn.dynamic_rnn (cell = rnn_cell, inputs = embedding_inputs, dtype = tf.float32)
+            last = _outputs [:, -1,:] # Take the last timing output as the result
+            with tf.name_scope ("score"):
+            # All connected layer, followed by dropout and relu activation
+            fc = tf.layers.dense (last, self.config.hidden_dim, name = 'fc1')
+            fc = tf.contrib.layers.dropout (fc, self.keep_prob)
+            fc = tf.nn.relu (fc)
+
+            # Classifier
+            self.logits = tf.layers.dense (fc, self.config.num_classes, name = 'fc2')
+            self.y_pred_cls = tf.argmax (tf.nn.softmax (self.logits), 1) # forecast category
+
+        with tf.name_scope ("optimize"):
+            # Loss function, cross entropy
+            cross_entropy = tf.nn.softmax_cross_entropy_with_logits (logits = self.logits, labels = self.input_y)
+            self.loss = tf.reduce_mean (cross_entropy)
+            # Optimizer
+            self.optim = tf.train.AdamOptimizer (learning_rate = self.config.learning_rate) .minimize (self.loss)
+
+        with tf.name_scope ("accuracy"):
+            # Accuracy
+            correct_pred = tf.equal (tf.argmax (self.input_y, 1), self.y_pred_cls)
+            self.acc = tf.reduce_mean (tf.cast (correct_pred, tf.float32))
+            
+            
+        RNn RNN
+        from rnn_model import *
+from data.cnews_loader import *
+from sklearn import metrics
+import sys
+
+import time
+from datetime import timedelta
+
+
+base_dir = 'data / cnews'
+train_dir = os.path.join (base_dir, 'cnews.train.txt')
+test_dir = os.path.join (base_dir, 'cnews.test.txt')
+val_dir = os.path.join (base_dir, 'cnews.val.txt')
+vocab_dir = os.path.join (base_dir, 'cnews.vocab.txt')
+
+save_dir = 'checkpoints / textrnn'
+save_path = os.path.join (save_dir, 'best_validation') # Save the path of the best authentication result
+
+def get_time_dif (start_time):
+    "" Get the used time "" "
+    end_time = time.time ()
+    time_dif = end_time - start_time
+    return timedelta (seconds = int (round (time_dif)))
+
+def feed_data (x_batch, y_batch, keep_prob):
+    feed_dict = {
+        model.input_x: x_batch,
+        model.input_y: y_batch,
+        model.keep_prob: keep_prob
+    }
+    return feed_dict
+
+def evaluate (sess, x_, y_):
+    "" Assessing the accuracy and loss in a given data "" "
+    data_len = len (x_)
+    batch_eval = batch_iter (x_, y_, 128)
+    total_loss = 0.0
+    total_acc = 0.0
+    for x_batch, y_batch in batch_eval:
+        batch_len = len (x_batch)
+        feed_dict = feed_data (x_batch, y_batch, 1.0)
+        loss, acc = sess.run ([model.loss, model.acc], feed_dict = feed_dict)
+        total_loss + = loss * batch_len
+        total_acc + = acc * batch_len
+
+    return total_loss / data_len, total_acc / data_len
+
+def train ():
+    print ("Configuring TensorBoard and Saver ...")
+    # Configure Tensorboard, retraining, please delete the tensorboard folder, otherwise the map will be overwritten
+    tensorboard_dir = 'tensorboard / textrnn'
+    if not os.path.exists (tensorboard_dir):
+        os.makedirs (tensorboard_dir)
+
+    tf.summary.scalar ("loss", model.loss)
+    tf.summary.scalar ("accuracy", model.acc)
+    merged_summary = tf.summary.merge_all ()
+    writer = tf.summary.FileWriter (tensorboard_dir)
+
+    # Configure Saver
+    saver = tf.train.Saver ()
+    if not os.path.exists (save_dir):
+        os.makedirs (save_dir)
+
+    print ("Loading training and validation data ...")
+    # Load Training Set and Verification Set
+    start_time = time.time ()
+    x_train, y_train = process_file (train_dir, word_to_id, cat_to_id, config.seq_length)
+    x_val, y_val = process_file (val_dir, word_to_id, cat_to_id, config.seq_length)
+    time_dif = get_time_dif (start_time)
+    print ("Time usage:", time_dif)
+
+    # Create session
+    session = tf.Session ()
+    session.run (tf.global_variables_initializer ())
+    writer.add_graph (session.graph)
+
+    print ('Training and evaluating ...')
+    start_time = time.time ()
+    total_batch = 0 # The total batch
+    best_acc_val = 0.0 # The best verification set accuracy
+    last_improved = 0 # Record the last promotion batch
+    require_improvement = 1000 # If more than 1000 rounds have not been promoted, finish training early
+
+    flag = False
+    for epoch in range (config.num_epochs):
+        print ('Epoch:', epoch + 1)
+        batch_train = batch_iter (x_train, y_train, config.batch_size)
+        for x_batch, y_batch in batch_train:
+            feed_dict = feed_data (x_batch, y_batch, config.dropout_keep_prob)
+
+            if total_batch% config.save_per_batch == 0:
+                # How many rounds of training results will be written to tensorboard scalar
+                s = session.run (merged_summary, feed_dict = feed_dict)
+                writer.add_summary (s, total_batch)
+            
+if total_batch% config.print_per_batch == 0:
+                # How many rounds per second output on the training set and validation set performance
+                feed_dict [model.keep_prob] = 1.0
+                loss_train, acc_train = session.run ([model.loss, model.acc], feed_dict = feed_dict)
+                loss_val, acc_val = evaluate (session, x_val, y_val) # todo
+
+                if acc_val> best_acc_val:
+                    # Save the best results
+                    best_acc_val = acc_val
+                    last_improved = total_batch
+                    saver.save (sess = session, save_path = save_path)
+                    improved_str = '*'
+                else:
+                    improved_str = ''
+
+                time_dif = get_time_dif (start_time)
+                Train Loss: {1:> 6.2}, Train Acc: {2:> 7.2%}, '\
+                    + 'Val Loss: {3:> 6.2}, Val Acc: {4:> 7.2%}, Time: {5} {6}'
+                print (msg.format (total_batch, loss_train, acc_train, loss_val, acc_val, time_dif, improved_str))
+
+            session.run (model.optim, feed_dict = feed_dict) # Run optimization
+            total_batch + = 1
+
+            if total_batch - last_improved> require_improvement:
+                # Verify the correct rate of long-term does not improve, early termination of training
+                print ("No optimization for a long time, auto-stopping ...")
+                flag = True
+                break # out of the loop
+        if flag: # Ibid
+            break
+
+def test ():
+    print ("Loading test data ...")
+    start_time = time.time ()
+    x_test, y_test = process_file (test_dir, word_to_id, cat_to_id, config.seq_length)
+
+    session = tf.Session ()
+    session.run (tf.global_variables_initializer ())
+    saver = tf.train.Saver ()
+    saver.restore (sess = session, save_path = save_path) # Read the saved model
+    print ('Testing ...')
+    loss_test, acc_test = evaluate (session, x_test, y_test)
+    msg = 'Test Loss: {0:> 6.2}, Test Acc: {1:> 7.2%}'
+    print (msg.format (loss_test, acc_test))
+
+    batch_size = 128
+    data_len = len (x_test)
+    num_batch = int ((data_len - 1) / batch_size) + 1
+
+    y_test_cls = np.argmax (y_test, 1)
+    y_pred_cls = np.zeros (shape = len (x_test), dtype = np.int32) # Save Forecast Results
+    for i in range (num_batch): # Processing batch by batch
+        start_id = i * batch_size
+        end_id = min ((i + 1) * batch_size, data_len)
+        feed_dict = {
+            model.input_x: x_test [start_id: end_id],
+            model.keep_prob: 1.0
+        }
+        y_pred_cls [start_id: end_id] = session.run (model.y_pred_cls, feed_dict = feed_dict)
+
+    # Assessment
+    print ("Precision, Recall and F1-Score ...")
+    print (metrics.classification_report (y_test_cls, y_pred_cls, target_names = categories))
+
+    # Confusion matrix
+    print ("Confusion Matrix ...")
+    cm = metrics.confusion_matrix (y_test_cls, y_pred_cls)
+    print (cm)
+
+    time_dif = get_time_dif (start_time)
+    print ("Time usage:", time_dif)
+
+
+if __name__ == '__main__':
+    if len (sys.argv)! = 2 or sys.argv [1] not in ['train', 'test']:
+        raise ValueError ("" "usage: python run_rnn.py [train / test]" "")
+
+    print ('Configuring RNN model ...')
+    config = TRNNConfig ()
+    if not os.path.exists (vocab_dir): # If there is no vocabulary, rebuild
+        build_vocab (train_dir, vocab_dir, config.vocab_size)
+    categories, cat_to_id = read_category ()
+    words, word_to_id = read_vocab (vocab_dir)
+    config.vocab_size = len (words)
+    model = TextRNN (config)
+
+    if sys.argv [1] == 'train':
+        train ()
+    else:
+        test ()
